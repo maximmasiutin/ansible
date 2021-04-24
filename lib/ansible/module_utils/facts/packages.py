@@ -18,6 +18,16 @@ def get_all_pkg_managers():
 
 class PkgMgr(with_metaclass(ABCMeta, object)):
 
+    def __init__(self):
+        self._need_package_details = True
+        self._all_available = False
+
+    def set_package_details(self, arg):
+        self._need_package_details = arg
+
+    def set_all_available(self, arg):
+        self._all_available = arg
+
     @abstractmethod
     def is_available(self):
         # This method is supposed to return True/False if the package manager is currently installed/usable
@@ -26,7 +36,7 @@ class PkgMgr(with_metaclass(ABCMeta, object)):
 
     @abstractmethod
     def list_installed(self):
-        # This method should return a list of installed packages, each list item will be passed to get_package_details
+        # This method should return a list of installed or available packages, each list item will be passed to get_package_details
         pass
 
     @abstractmethod
@@ -35,13 +45,16 @@ class PkgMgr(with_metaclass(ABCMeta, object)):
         pass
 
     def get_packages(self):
-        # Take all of the above and return a dictionary of lists of dictionaries (package = list of installed versions)
+        # Take all of the above and return a dictionary of lists of dictionaries (package = list of installed or available versions)
 
         installed_packages = {}
         for package in self.list_installed():
             package_details = self.get_package_details(package)
-            if 'source' not in package_details:
-                package_details['source'] = self.__class__.__name__.lower()
+            if not package_details:
+                continue
+            if self._need_package_details:
+                if 'source' not in package_details:
+                    package_details['source'] = self.__class__.__name__.lower()
             name = package_details['name']
             if name not in installed_packages:
                 installed_packages[name] = [package_details]
@@ -55,7 +68,6 @@ class LibMgr(PkgMgr):
     LIB = None
 
     def __init__(self):
-
         self._lib = None
         super(LibMgr, self).__init__()
 

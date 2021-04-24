@@ -1,0 +1,5 @@
+---
+minor_changes:
+  - package_facts - Add ``all_available`` option (https://github.com/ansible/ansible/issues/74428).
+  - package_facts - Add ``need_package_details`` option (https://github.com/ansible/ansible/issues/74437).
+  - package_facts - Add ``yum`` manager to the list available managers at the ``manager`` (https://github.com/ansible/ansible/issues/74427).

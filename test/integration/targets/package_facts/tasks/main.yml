@@ -113,3 +113,189 @@
         - name: restore previous flags for the selected package
           command: 'pkg set --yes -v 0 -A 0 {{ pkg_name }}'
   when: ansible_os_family == "FreeBSD"
+
+- name: Run package_fact all_available option tests - Ubuntu 18
+  block:
+
+    - name: "Get available package information, but without details"
+      package_facts:
+        need_package_details: no
+        all_available: yes
+
+    - name: "Updated the packages if were not updated before"
+      block:
+        - name: "Update packages"
+          raw: "sudo apt update"
+        - name: "Get available package information again after the update, but without details"
+          package_facts:
+            need_package_details: no
+            all_available: yes
+      when: "'acccheck' not in ansible_facts.available_packages"
+
+    - name: Validate the results
+      assert:
+        that:
+          - "'acccheck' in ansible_facts.available_packages"
+          - "'abinit' in ansible_facts.available_packages"
+          - "'actionaz' in ansible_facts.available_packages"
+          - "'alliance' in ansible_facts.available_packages"
+          - "'zyne' in ansible_facts.available_packages"
+          - "'alsa-topology-conf' not in ansible_facts.available_packages"
+          - "'amphora-agent' not in ansible_facts.available_packages"
+          - "'anbox' not in ansible_facts.available_packages"
+          - "'wmmisc' not in ansible_facts.available_packages"
+          - "'zytrax' not in ansible_facts.available_packages"
+          - ansible_facts.available_packages['zyne'][0].name is defined
+          - ansible_facts.available_packages['zyne'][0].is_installed is not defined
+          - ansible_facts.available_packages['zyne'][0].source is not defined
+          - ansible_facts.available_packages['zyne'][0].version is not defined
+
+    - name: "Get available package information with details"
+      package_facts:
+        need_package_details: yes
+        all_available: yes
+
+    - name: Validate the contents of the available_packages dictionary with details
+      assert:
+        that:
+          - ansible_facts.available_packages['zyne'][0].name is defined
+          - ansible_facts.available_packages['zyne'][0].is_installed is defined
+          - ansible_facts.available_packages['zyne'][0].source is defined
+
+  when: >
+    ansible_distribution == 'Ubuntu' and
+    ansible_distribution_major_version == '18'
+
+- name: Run package_fact all_available option tests - Ubuntu 20
+  block:
+
+    - name: "Get available package information, but without details"
+      package_facts:
+        need_package_details: no
+        all_available: yes
+
+    - name: "Updated the packages if were not updated before"
+      block:
+        - name: "Update packages"
+          raw: "sudo apt update"
+        - name: "Get available package information again after the update, but without details"
+          package_facts:
+            need_package_details: no
+            all_available: yes
+      when: "'anbox' not in ansible_facts.available_packages"
+
+    - name: Validate the contents of the available_packages dictionary without details
+      assert:
+        that:
+          - "'acccheck' not in ansible_facts.available_packages"
+          - "'abinit' not in ansible_facts.available_packages"
+          - "'actionaz' not in ansible_facts.available_packages"
+          - "'alliance' not in ansible_facts.available_packages"
+          - "'zyne' not in ansible_facts.available_packages"
+          - "'alsa-topology-conf' in ansible_facts.available_packages"
+          - "'amphora-agent' in ansible_facts.available_packages"
+          - "'anbox' in ansible_facts.available_packages"
+          - "'wmmisc' in ansible_facts.available_packages"
+          - "'zytrax' in ansible_facts.available_packages"
+          - ansible_facts.available_packages['anbox'][0].name is defined
+          - ansible_facts.available_packages['anbox'][0].is_installed is not defined
+          - ansible_facts.available_packages['anbox'][0].source is not defined
+          - ansible_facts.available_packages['anbox'][0].version is not defined
+
+    - name: "Get available package information with details"
+      package_facts:
+        manager: apt
+        need_package_details: yes
+        all_available: yes
+
+    - name: Validate the contents of the available_packages dictionary with details
+      assert:
+        that:
+          - ansible_facts.available_packages['anbox'][0].name is defined
+          - ansible_facts.available_packages['anbox'][0].is_installed is defined
+          - ansible_facts.available_packages['anbox'][0].source is defined
+          - ansible_facts.available_packages['anbox'][0].is_installed == false
+          - ansible_facts.available_packages['anbox'][0].source == 'apt'
+
+  when: >
+    ansible_distribution == 'Ubuntu' and
+    ansible_distribution_major_version == '20'
+
+- name: Run package_fact all_available option tests - Centos 8
+  block:
+
+    - name: "Get available package information, but without details"
+      package_facts:
+        need_package_details: no
+        all_available: yes
+
+    - name: Validate the results
+      assert:
+        that:
+          - "'alpine-keys' not in ansible_facts.available_packages"
+          - "'anbox' not in ansible_facts.available_packages"
+          - "'avahi-compat-howl' not in ansible_facts.available_packages"
+          - "'adplug' in ansible_facts.available_packages"
+          - ansible_facts.available_packages['adplug'][0].name is defined
+          - ansible_facts.available_packages['adplug'][0].is_installed is not defined
+          - ansible_facts.available_packages['adplug'][0].source is not defined
+          - ansible_facts.available_packages['adplug'][0].version is not defined
+
+    - name: "Get available package information with details"
+      package_facts:
+        manager: yum
+        need_package_details: yes
+        all_available: yes
+
+    - name: Validate the contents of the available_packages dictionary with details
+      assert:
+        that:
+          - ansible_facts.available_packages['adplug'][0].name is defined
+          - ansible_facts.available_packages['adplug'][0].arch is defined
+          - ansible_facts.available_packages['adplug'][0].release is defined
+          - ansible_facts.available_packages['adplug'][0].repo is defined
+          - ansible_facts.available_packages['adplug'][0].source is defined
+          - ansible_facts.available_packages['adplug'][0].version is defined
+          - ansible_facts.available_packages['adplug'][0].repo == 'epel'
+          - ansible_facts.available_packages['adplug'][0].arch == 'x86_64'
+          - ansible_facts.available_packages['adplug'][0].source == 'yum'
+
+  when: >
+    ansible_distribution == 'CentOS' and
+    ansible_distribution_major_version == '8'
+
+- name: Run package_fact all_available option tests - Alpine 3
+  block:
+
+    - name: "Get available package information, but without details"
+      package_facts:
+        need_package_details: no
+        all_available: yes
+
+    - name: Validate the results
+      assert:
+        that:
+          - "'adplug' not in ansible_facts.available_packages"
+          - "'anbox' not in ansible_facts.available_packages"
+          - "'alpine-keys' in ansible_facts.available_packages"
+          - "'wqy-microhei-fonts' not in ansible_facts.available_packages"
+          - ansible_facts.available_packages['alpine-keys'][0].name is defined
+          - ansible_facts.available_packages['alpine-keys'][0].is_installed is not defined
+          - ansible_facts.available_packages['alpine-keys'][0].source is not defined
+          - ansible_facts.available_packages['alpine-keys'][0].version is not defined
+
+    - name: "Get available package information with details"
+      package_facts:
+        manager: apk
+        need_package_details: yes
+        all_available: yes
+
+    - name: Validate the contents of the available_packages dictionary with details
+      assert:
+        that:
+          - ansible_facts.available_packages['alpine-keys'][0].name is defined
+          - ansible_facts.available_packages['alpine-keys'][0].version is defined
+
+  when: >
+    ansible_distribution == 'Alpine' and
+    ansible_distribution_major_version == '3'
